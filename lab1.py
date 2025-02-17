@@ -2,25 +2,25 @@ import random
 
 class Grammar:
     def __init__(self, VN, VT, P, S):
-        self.VN = VN  # Non-terminals
-        self.VT = VT  # Terminals
-        self.P = P  # Production rules
-        self.S = S  # Start symbol
+        self.VN = VN  # NT
+        self.VT = VT  # T
+        self.P = P  # production rule
+        self.S = S  # start symbol
 
     def generate_string(self):
         """Generate a valid string based on the grammar rules."""
         current = [self.S]
-        while any(symbol in self.VN for symbol in current):  # Keep replacing non-terminals
+        while any(symbol in self.VN for symbol in current):  #replacing non-terminals
             for i, symbol in enumerate(current):
-                if symbol in self.VN:  # Replace first non-terminal
+                if symbol in self.VN:  #replace first non-terminal
                     production = random.choice(self.P[symbol])
                     current = current[:i] + list(production) + current[i + 1:]
-                    break  # Restart the loop to process from the beginning
+                    break 
         return ''.join(current)
 
     def to_finite_automaton(self):
         """Convert the grammar to a finite automaton."""
-        states = set(self.VN) | {'F'}  # Add final state
+        states = set(self.VN) | {'F'}  #final state
         alphabet = set(self.VT)
         start_state = self.S
         accept_states = {'F'}
@@ -28,7 +28,7 @@ class Grammar:
 
         for nt, productions in self.P.items():
             for production in productions:
-                if len(production) == 1:  # A → a (direct transition to final)
+                if len(production) == 1:  # A → a (transition to final)
                     transitions[nt][production[0]] = 'F'
                 else:  # A → aB (transition to another state)
                     first_symbol = production[0]
@@ -51,14 +51,13 @@ class FiniteAutomaton:
         current_state = self.start_state
         for symbol in input_string:
             if symbol not in self.alphabet:
-                return False  # Invalid symbol
+                return False  
             if symbol not in self.transitions[current_state]:
-                return False  # No transition exists
+                return False  
             current_state = self.transitions[current_state][symbol]
         return current_state in self.accept_states
 
 
-# Example Usage
 if __name__ == "__main__":
     VN = {'S', 'A', 'B', 'C'}
     VT = {'a', 'b', 'c', 'd'}
@@ -70,18 +69,15 @@ if __name__ == "__main__":
     }
     S = 'S'
 
-    # Create the grammar
     grammar = Grammar(VN, VT, P, S)
 
     print("\nGenerated Strings:")
     for _ in range(5):
         print(grammar.generate_string())
 
-    # Convert to Finite Automaton
     fa = grammar.to_finite_automaton()
 
-    # Test strings for language acceptance
-    test_strings = ['db', 'dababcd', 'dad', 'dabaad', 'invalid']
+    test_strings = ['daaab', 'dababcd', 'dad', 'dabaad', 'invalid']
     print("\nString Belonging to Language:")
     for s in test_strings:
         print(f"'{s}' -> {fa.string_belongs_to_language(s)}")
