@@ -4,84 +4,111 @@
 ### Author: Racovita Dumitru
 
 ----
+Theory
 
-## Theory
-If needed, but it should be written by the author in her/his words.
+Formal languages and finite automata are foundational concepts in computer science, particularly in the study of computational theory and compiler design. A formal language is a set of strings composed of symbols from a specified alphabet, constructed according to a set of rules defined by a grammar. These rules, known as production rules, dictate how symbols can be combined to form valid strings within the language.
 
+A grammar is formally defined as a quadruple G=(VN,VT,P,S)G=(VN​,VT​,P,S), where:
 
-## Objectives:
+    VNVN​ is a set of non-terminal symbols (variables that can be replaced by other symbols).
 
-   1.Discover what a language is and what it needs to have in order to be considered a formal one;
+    VTVT​ is a set of terminal symbols (the alphabet of the language).
 
-  2.Provide the initial setup for the evolving project that you will work on during this semester. You can deal with each laboratory work as a separate task or project to demonstrate your understanding of the given themes, but you also can deal with labs as stages of making your own big solution, your own project. Do the following:
+    PP is a set of production rules that describe how non-terminals can be replaced by combinations of terminals and non-terminals.
 
-   a. Create GitHub repository to deal with storing and updating your project;
+    SS is the start symbol, from which all valid strings in the language are derived.
 
-  b. Choose a programming language. Pick one that will be easiest for dealing with your tasks, you need to learn how to solve the problem itself, not everything around the problem (like setting up the project, launching it correctly and etc.);
+A finite automaton (FA) is a mathematical model used to recognize patterns within input strings. It consists of a finite number of states, transitions between these states based on input symbols, a start state, and one or more accept (or final) states. Finite automata are closely related to regular grammars, as every regular grammar can be converted into a finite automaton and vice versa.
 
-  c. Store reports separately in a way to make verification of your work simpler (duh)
+The connection between grammars and finite automata is crucial in understanding how languages are defined and processed. This laboratory work explores this relationship by implementing a grammar, generating valid strings, and converting the grammar into a finite automaton to verify the validity of input strings.
+Objectives
 
-   3.According to your variant number, get the grammar definition and do the following:
+The primary objectives of this laboratory work are:
 
-  a. Implement a type/class for your grammar;
+    To understand the concept of formal languages and the components required to define them.
 
-  b. Add one function that would generate 5 valid strings from the language expressed by your given grammar;
+    To set up a project structure for implementing and evolving solutions related to formal languages and finite automata. This includes:
 
-  c. Implement some functionality that would convert and object of type Grammar to one of type Finite Automaton;
+        Creating a GitHub repository for version control and collaboration.
 
-   d. For the Finite Automaton, please add a method that checks if an input string can be obtained via the state transition from it;
+        Selecting a programming language suitable for the tasks.
 
+        Organizing reports and code for ease of verification.
 
-## Implementation description
+    To implement a grammar based on a given variant and perform the following tasks:
 
-* Grammar Class:
+        Define a class to represent the grammar.
 
-    Defines a formal grammar with non-terminals (VN), terminals (VT), production rules (P), and a start symbol (S).
-    generate_string(): Randomly builds a valid string by replacing non-terminals using production rules until only terminals remain.
-    to_finite_automaton(): Converts the grammar into a finite automaton by defining states, transitions, and final states.
+        Generate valid strings from the language defined by the grammar.
 
-* FiniteAutomaton Class:
+        Convert the grammar into a finite automaton.
 
-    Represents a state machine with states, alphabet, transitions, start state, and final states.
-    string_belongs_to_language(): Checks if an input string follows valid state transitions, verifying if it belongs to the language.
+        Implement functionality to check if an input string belongs to the language recognized by the finite automaton.
 
-* Main Execution:
+Implementation
 
-    Creates a grammar, generates 5 sample strings, and converts it into an automaton.
-    Tests different input strings to check if they belong to the language.
+The implementation is divided into two main components: the Grammar class and the FiniteAutomaton class. Below is a description of the key functionalities and methods:
+Grammar Class
 
+The Grammar class represents a formal grammar with attributes for non-terminals (VN), terminals (VT), production rules (P), and the start symbol (S).
+Key Methods:
 
-python
-```
-import random
+    generate_string:
 
-class Grammar:
-    def __init__(self, VN, VT, P, S):
-        self.VN = VN  # NT
-        self.VT = VT  # T
-        self.P = P  # production rule
-        self.S = S  # start symbol
+        This method generates a valid string by iteratively replacing non-terminal symbols with their corresponding productions until only terminal symbols remain.
 
-    def generate_string(self):
-        """Generate a valid string based on the grammar rules."""
-        current = [self.S]
-        while any(symbol in self.VN for symbol in current):  #replacing non-terminals
-            for i, symbol in enumerate(current):
-                if symbol in self.VN:  #replace first non-terminal
-                    production = random.choice(self.P[symbol])
-                    current = current[:i] + list(production) + current[i + 1:]
-                    break 
-        return ''.join(current)
+        It starts with the start symbol S and uses random selection to choose among possible productions for each non-terminal.
 
-    def to_finite_automaton(self):
-        """Convert the grammar to a finite automaton."""
-        states = set(self.VN) | {'F'}  #final state
-        alphabet = set(self.VT)
-        start_state = self.S
-        accept_states = {'F'}
-        transitions = {state: {} for state in states}
+        The process continues until no non-terminals are left in the string.
 
-        for nt, productions in self.P.items():
+    to_finite_automaton:
+
+        This method converts the grammar into a finite automaton.
+
+        It defines the states as the non-terminals plus an additional final state F.
+
+        Transitions are created based on the production rules. For example, a rule like A→aBA→aB results in a transition from state AA to state BB on input symbol aa.
+
+        The start state is the grammar's start symbol, and the accept state is F.
+
+FiniteAutomaton Class
+
+The FiniteAutomaton class represents a finite automaton with attributes for states, alphabet, transitions, start state, and accept states.
+Key Methods:
+
+    string_belongs_to_language:
+
+        This method checks if a given input string is accepted by the automaton.
+
+        It simulates the automaton's operation by following the transitions for each symbol in the input string.
+
+        If the final state after processing the string is an accept state, the string belongs to the language; otherwise, it does not.
+
+Main Execution
+    Iterating Through Productions:
+
+        For each non-terminal (nt), the code examines all its possible productions.
+
+        Each production represents a rule that defines how the non-terminal can be replaced.
+
+    Handling Single-Symbol Productions:
+
+        If the length of the production is 1 (e.g., A→aA→a), it signifies a transition to the final state F.
+
+        This is because a single terminal symbol in the production means the non-terminal can be directly replaced by a terminal, leading to the end of the string.
+
+        The transition is added to the transitions dictionary, mapping the non-terminal and the terminal symbol to the final state F.
+
+    Handling Multi-Symbol Productions:
+
+        If the production has more than one symbol (e.g., A→aBA→aB), it represents a transition to another non-terminal state.
+
+        The first symbol of the production is a terminal (e.g., a), and the second symbol is a non-terminal (e.g., B).
+
+        The transition is added to the transitions dictionary, mapping the non-terminal and the terminal symbol to the next state (e.g., B).
+
+   ``` python
+         for nt, productions in self.P.items():
             for production in productions:
                 if len(production) == 1:  # A → a (transition to final)
                     transitions[nt][production[0]] = 'F'
@@ -89,60 +116,15 @@ class Grammar:
                     first_symbol = production[0]
                     next_state = production[1]
                     transitions[nt][first_symbol] = next_state
-
-        return FiniteAutomaton(states, alphabet, transitions, start_state, accept_states)
-
-
-class FiniteAutomaton:
-    def __init__(self, states, alphabet, transitions, start_state, accept_states):
-        self.states = states
-        self.alphabet = alphabet
-        self.transitions = transitions
-        self.start_state = start_state
-        self.accept_states = accept_states
-
-    def string_belongs_to_language(self, input_string):
-        """Check if a given string is accepted by the finite automaton."""
-        current_state = self.start_state
-        for symbol in input_string:
-            if symbol not in self.alphabet:
-                return False  
-            if symbol not in self.transitions[current_state]:
-                return False  
-            current_state = self.transitions[current_state][symbol]
-        return current_state in self.accept_states
-
-
-if __name__ == "__main__":
-    VN = {'S', 'A', 'B', 'C'}
-    VT = {'a', 'b', 'c', 'd'}
-    P = {
-        'S': ['dA'],
-        'A': ['aB', 'b'],
-        'B': ['bC', 'd'],
-        'C': ['cB', 'aA']
-    }
-    S = 'S'
-
-    grammar = Grammar(VN, VT, P, S)
-
-    print("\nGenerated Strings:")
-    for _ in range(5):
-        print(grammar.generate_string())
-
-    fa = grammar.to_finite_automaton()
-
-    test_strings = ['da']
-    print("\nString Belonging to Language:")
-    for s in test_strings:
-        print(f"'{s}' -> {fa.string_belongs_to_language(s)}")
-
 ```
 
+---
 * ![image](https://github.com/user-attachments/assets/0ef2876b-6914-414e-9584-fc2026665b6b)
 
 
 
 ## Conclusions 
-   This laboratory work introduced formal grammars and finite automata, showing how to define a language using production rules and convert it into a state machine. The implementation generates valid strings and verifies if an input belongs to the language. This demonstrates the connection between regular grammars and finite automata, reinforcing their role in computational theory and language processing.
+   This laboratory work provided a practical introduction to formal grammars and finite automata. By implementing a grammar and converting it into a finite automaton, we demonstrated the close relationship between these two concepts. The ability to generate valid strings and verify their acceptance by the automaton highlights the importance of these models in language processing and computational theory.
+
+The project also emphasized the importance of structured implementation and clear documentation, which are essential for understanding and extending such systems. Future work could explore more complex grammars, such as context-free grammars, and their corresponding automata, as well as applications in parsing and compiler design.
 
