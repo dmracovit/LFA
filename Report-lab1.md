@@ -1,4 +1,4 @@
-# Laboratory work 1
+# Laboratory work 1.
 
 ### Course: Formal Languages & Finite Automata
 ### Author: Racovita Dumitru
