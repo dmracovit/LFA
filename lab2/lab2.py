@@ -1,14 +1,12 @@
 import random
-from collections import defaultdict
 from graphviz import Digraph
-
 
 class Grammar:
     def __init__(self, VN, VT, P, S):
         self.VN = VN  # Non-terminals
         self.VT = VT  # Terminals
-        self.P = P  # Production rules
-        self.S = S  # Start symbol
+        self.P = P    # Productions
+        self.S = S    # Start symbol
 
     def generate_string(self):
         """Generate a valid string based on the grammar rules."""
@@ -21,39 +19,6 @@ class Grammar:
                     break
         return ''.join(current)
 
-    def classify_grammar(self):
-        """Classify the grammar based on the Chomsky hierarchy."""
-        is_regular = True
-        is_context_free = True
-        is_context_sensitive = True
-
-        for lhs, productions in self.P.items():
-            for production in productions:
-                # Check for Regular Grammar (Type 3)
-                if len(production) == 1 and production[0] in self.VT:
-                    continue
-                elif len(production) == 2 and production[0] in self.VT and production[1] in self.VN:
-                    continue
-                else:
-                    is_regular = False
-
-                # Check for Context-Free Grammar (Type 2)
-                if len(lhs) != 1 or lhs not in self.VN:
-                    is_context_free = False
-
-                # Check for Context-Sensitive Grammar (Type 1)
-                if len(production) < len(lhs):
-                    is_context_sensitive = False
-
-        if is_regular:
-            return "Type 3 (Regular)"
-        elif is_context_free:
-            return "Type 2 (Context-Free)"
-        elif is_context_sensitive:
-            return "Type 1 (Context-Sensitive)"
-        else:
-            return "Type 0 (Unrestricted)"
-
     def to_finite_automaton(self):
         """Convert the grammar to a finite automaton."""
         states = set(self.VN) | {'F'}  # Final state
@@ -65,13 +30,54 @@ class Grammar:
         for nt, productions in self.P.items():
             for production in productions:
                 if len(production) == 1:  # A → a (transition to final)
-                    transitions[nt][production[0]] = 'F'
+                    transitions[nt][production[0]] = {'F'}
                 else:  # A → aB (transition to another state)
                     first_symbol = production[0]
                     next_state = production[1]
-                    transitions[nt][first_symbol] = next_state
+                    if first_symbol not in transitions[nt]:
+                        transitions[nt][first_symbol] = set()
+                    transitions[nt][first_symbol].add(next_state)
 
         return FiniteAutomaton(states, alphabet, transitions, start_state, accept_states)
+
+    def classify_grammar(self):
+        """Classify the grammar based on Chomsky hierarchy."""
+        is_type_3 = True
+        for lhs in self.P:
+            if len(lhs) != 1 or lhs not in self.VN:
+                return "Type 0 (Unrestricted)"
+            for production in self.P[lhs]:
+                if len(production) == 0:
+                    if lhs != self.S:
+                        is_type_3 = False
+                    continue
+                if len(production) == 1:
+                    if production[0] not in self.VT:
+                        is_type_3 = False
+                else:
+                    terminals = 0
+                    non_terminals = 0
+                    for char in production:
+                        if char in self.VT:
+                            terminals += 1
+                        elif char in self.VN:
+                            non_terminals += 1
+                    if non_terminals != 1 or terminals != len(production) - 1:
+                        is_type_3 = False
+                    if production[-1] not in self.VN and production[0] not in self.VN:
+                        is_type_3 = False
+        return "Type 3 (Regular)" if is_type_3 else "Type 2 (Context-free)"
+
+    def __repr__(self):
+        """Pretty-print the grammar in the desired format."""
+        return f"""Grammar {{
+  VN: {sorted(list(self.VN))},
+  VT: {sorted(list(self.VT))},
+  startVariable: '{self.S}',
+  hashMap: {{
+    {',\n    '.join(f"'{k}' => {v}" for k, v in sorted(self.P.items()))}
+  }}
+}}"""
 
 
 class FiniteAutomaton:
@@ -83,125 +89,176 @@ class FiniteAutomaton:
         self.accept_states = accept_states
 
     def string_belongs_to_language(self, input_string):
-        """Check if a given string is accepted by the finite automaton."""
-        current_state = self.start_state
+        """Check if a string is accepted by the automaton."""
+        current_states = {self.start_state}
         for symbol in input_string:
-            if symbol not in self.alphabet:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get(state, {}).get(symbol, set()))
+            current_states = next_states
+            if not current_states:
                 return False
-            if symbol not in self.transitions[current_state]:
-                return False
-            current_state = self.transitions[current_state][symbol]
-        return current_state in self.accept_states
+        return any(state in self.accept_states for state in current_states)
 
     def is_deterministic(self):
-        """Check if the finite automaton is deterministic."""
-        for state, transitions in self.transitions.items():
-            for symbol, next_state in transitions.items():
-                if isinstance(next_state, set):
+        """Check if the automaton is deterministic."""
+        for state in self.transitions:
+            for symbol in self.transitions[state]:
+                # multiple transitions for the same symbol
+                if len(self.transitions[state][symbol]) > 1:
+                    return False
+                # epsilon transitions (non-deterministic)
+                if symbol == '':
+                    return False
+            # if all symbols in the alphabet are defined for the state
+            for symbol in self.alphabet:
+                if symbol not in self.transitions[state]:
                     return False
         return True
 
-    def convert_ndfa_to_dfa(self):
-        """Convert an NDFA to a DFA using subset construction."""
-        dfa_states = set()
-        dfa_transitions = defaultdict(dict)
-        dfa_start_state = frozenset({self.start_state})
-        dfa_accept_states = set()
+    def to_regular_grammar(self):
+        """Convert the automaton to a regular grammar."""
+        P = {state: [] for state in self.states}
+        for state in self.transitions:
+            for symbol in self.transitions[state]:
+                for next_state in self.transitions[state][symbol]:
+                    P[state].append(f"{symbol}{next_state}")
+        for accept in self.accept_states:
+            P[accept].append('')
+        return Grammar(self.states, self.alphabet, P, self.start_state)
 
-        stack = [dfa_start_state]
-        dfa_states.add(dfa_start_state)
+    def convert_to_dfa(self):
+        """Convert NFA to DFA using subset construction."""
+        dfa_start = frozenset({self.start_state})
+        dfa_states = {dfa_start}
+        dfa_accept = set()
+        dfa_transitions = {}
+        queue = [dfa_start]
 
-        while stack:
-            current_state = stack.pop()
+        # Map frozenset states to readable names (q0, q1, etc.)
+        state_names = {dfa_start: 'q0'}
+        state_counter = 1
+
+        if any(state in self.accept_states for state in dfa_start):
+            dfa_accept.add(state_names[dfa_start])
+
+        while queue:
+            current = queue.pop(0)
+            current_name = state_names[current]
+            dfa_transitions[current_name] = {}
 
             for symbol in self.alphabet:
-                next_state = frozenset(
-                    {next_state for state in current_state for next_state in self.transitions[state].get(symbol, set())}
-                )
+                next_states = set()
+                for state in current:
+                    if symbol in self.transitions.get(state, {}):
+                        next_states.update(self.transitions[state][symbol])
+                next_frozen = frozenset(next_states)
 
-                if next_state:
-                    dfa_transitions[current_state][symbol] = next_state
+                if not next_frozen: 
+                    continue
 
-                    if next_state not in dfa_states:
-                        dfa_states.add(next_state)
-                        stack.append(next_state)
+                if next_frozen not in state_names:
+                    state_names[next_frozen] = f'q{state_counter}'
+                    state_counter += 1
+                    queue.append(next_frozen)
+                    if any(state in self.accept_states for state in next_frozen):
+                        dfa_accept.add(state_names[next_frozen])
 
-                    if any(state in self.accept_states for state in next_state):
-                        dfa_accept_states.add(next_state)
+                dfa_transitions[current_name][symbol] = state_names[next_frozen]
 
-        return FiniteAutomaton(dfa_states, self.alphabet, dfa_transitions, dfa_start_state, dfa_accept_states)
+        dfa_states_renamed = set(state_names.values())
+        return FiniteAutomaton(
+            dfa_states_renamed,
+            self.alphabet,
+            dfa_transitions,
+            state_names[dfa_start],
+            dfa_accept
+        )
 
-    def to_regular_grammar(self):
-        """Convert the finite automaton to a regular grammar."""
-        VN = self.states
-        VT = self.alphabet
-        P = {}
-        S = self.start_state
-
-        for state, transitions in self.transitions.items():
-            P[state] = []
-            for symbol, next_state in transitions.items():
-                if next_state in self.accept_states:
-                    P[state].append(symbol)
-                else:
-                    P[state].append(symbol + next_state)
-
-        return Grammar(VN, VT, P, S)
-
-    def visualize(self):
-        """Visualize the finite automaton using graphviz."""
-        dot = Digraph()
-
+    def visualize(self, title="FA"):
+        """Generate a visual representation of the automaton."""
+        dot = Digraph(comment=title)
+        dot.attr(rankdir='LR')
+        dot.node('start', shape='none', label='')
+        dot.edge('start', self.start_state)
         for state in self.states:
             if state in self.accept_states:
-                dot.node(str(state), shape='doublecircle')
+                dot.node(state, shape='doublecircle')
             else:
-                dot.node(str(state))
+                dot.node(state, shape='circle')
+            for symbol, next_states in self.transitions[state].items():
+                for next_state in next_states:
+                    dot.edge(state, next_state, label=symbol)
+        dot.render(title, format='png', cleanup=True)
+        print(f"Visualization saved as {title}.png")
 
-        for state, transitions in self.transitions.items():
-            for symbol, next_state in transitions.items():
-                dot.edge(str(state), str(next_state), label=symbol)
+    def __repr__(self):
+        """Pretty-print the automaton in the desired format."""
+        return f"""Q: {{{', '.join(map(str, self.states))}}}
+Sigma: {{{', '.join(self.alphabet)}}}
+delta: {self._format_transitions()}
+q0: {self.start_state}
+F: {{{', '.join(map(str, self.accept_states))}}}"""
 
-        dot.render('finite_automaton', format='png', cleanup=True)
-        return dot
+    def _format_transitions(self):
+        """Format transitions for pretty-printing."""
+        transitions = []
+        for state in self.transitions:
+            for symbol in self.transitions[state]:
+                for next_state in self.transitions[state][symbol]:
+                    transitions.append(f'["{state},{symbol}","{next_state}"]')
+        return f"[{', '.join(transitions)}]"
 
 
 if __name__ == "__main__":
-    # Define the finite automaton for Variant 26
-    states = {'q0', 'q1', 'q2', 'q3'}
-    alphabet = {'a', 'b', 'c'}
-    transitions = {
-        'q0': {'a': {'q0', 'q1'}},  # Non-deterministic transition
+    VN = {'S', 'A', 'B', 'C'}
+    VT = {'a', 'b', 'c', 'd'}
+    P = {
+        'S': ['dA'],
+        'A': ['aB', 'b'],
+        'B': ['bC', 'd'],
+        'C': ['cB', 'aA']
+    }
+    S = 'S'
+
+    grammar = Grammar(VN, VT, P, S)
+
+    variant_states = {'q0', 'q1', 'q2', 'q3'}
+    variant_alphabet = {'a', 'b', 'c'}
+    variant_transitions = {
+        'q0': {'a': {'q0', 'q1'}},
         'q1': {'b': {'q1'}, 'a': {'q2'}},
         'q2': {'c': {'q3'}},
         'q3': {'c': {'q3'}}
     }
-    start_state = 'q0'
-    accept_states = {'q3'}
+    variant_start = 'q0'
+    variant_accept = {'q3'}
 
-    # Create the finite automaton
-    fa = FiniteAutomaton(states, alphabet, transitions, start_state, accept_states)
+    variant_dfa = FiniteAutomaton(
+        variant_states,
+        variant_alphabet,
+        variant_transitions,
+        variant_start,
+        variant_accept
+    )
 
-    # Check if the FA is deterministic
-    print("\nIs FA Deterministic?")
-    print(fa.is_deterministic())  # Expected: False (since δ(q0, a) has two possible states)
+    generated_string = grammar.generate_string()
+    print(f"Generated string: {generated_string}")
 
-    # Convert NDFA to DFA
-    print("\nConvert NDFA to DFA:")
-    dfa = fa.convert_ndfa_to_dfa()
-    print("DFA States:", dfa.states)
-    print("DFA Transitions:", dfa.transitions)
-    print("DFA Start State:", dfa.start_state)
-    print("DFA Accept States:", dfa.accept_states)
+    print(f"Grammar classification: {grammar.classify_grammar()}")
 
-    # Convert FA to Regular Grammar
-    print("\nConvert FA to Regular Grammar:")
-    regular_grammar = fa.to_regular_grammar()
-    print("VN:", regular_grammar.VN)
-    print("VT:", regular_grammar.VT)
-    print("P:", regular_grammar.P)
-    print("S:", regular_grammar.S)
+    fa = grammar.to_finite_automaton()
+    print("\nFinite Automaton:")
+    print(fa)
 
-    # Visualize the FA (optional)
-    print("\nVisualize FA:")
-    fa.visualize()
+    print("\nIs deterministic:", fa.is_deterministic())
+
+    dfa = fa.convert_to_dfa()
+    print("\nDFA:")
+    print(dfa)
+
+    print("\nRegular Grammar:")
+    print(grammar)
+
+    fa.visualize("NDFA")
+    variant_dfa.visualize("DFA")
