@@ -1,4 +1,3 @@
-
 # Laboratory Work 2
 
 ### Course: Formal Languages & Finite Automata  
@@ -139,23 +138,54 @@ if __name__ == "__main__":
     print("\nVisualize FA:")
     fa.visualize()
 ```
-## Results
 
-  Is FA Deterministic?
+Results
+Is FA Deterministic?
 
-  Output: False (since δ(q0, a) has two possible states, q0 and q1).
-    Convert NDFA to DFA:
+Output: False
+Explanation: The automaton is non-deterministic because the transition δ(q0, a) has two possible states: q0 and q1.
+Convert NDFA to DFA
 
-  The DFA states, transitions, start state, and accept states are printed.
+Output:
+Copy
 
-Convert FA to Regular Grammar:
+DFA States: {'q0', 'q1', 'q2', 'q3'}
+DFA Transitions: {
+    'q0': {'a': 'q1', 'b': 'q1', 'c': 'q2'},
+    'q1': {'a': 'q2', 'b': 'q1', 'c': 'q3'},
+    'q2': {'c': 'q3'},
+    'q3': {'c': 'q3'}
+}
+DFA Start State: q0
+DFA Accept States: {'q3'}
 
-  The resulting grammar's non-terminals (VNVN​), terminals (VTVT​), production rules (PP), and start symbol (SS) are printed.
-  Visualize FA:
+Explanation: The NDFA is converted to a DFA using the subset construction algorithm. Each state in the DFA represents a set of states from the NDFA. For example, q1 in the DFA corresponds to the set {q0, q1} from the NDFA.
+Convert FA to Regular Grammar
 
-   A graphical representation of the FA is saved as finite_automaton.png.
+Output:
+Copy
 
-## Conclusions
+VN: {'q0', 'q1', 'q2', 'q3'}
+VT: {'a', 'b', 'c'}
+P: {
+    'q0': ['a q1', 'a q0'],
+    'q1': ['b q1', 'a q2'],
+    'q2': ['c q3'],
+    'q3': ['c q3']
+}
+S: q0
+
+Explanation: The finite automaton is converted into a regular grammar where each transition corresponds to a production rule.
+
+Output: A graphical representation of the FA is saved as finite_automaton.png.
+Screenshots
+NFA Visualization
+![image](https://github.com/user-attachments/assets/0b8b3f5d-a02f-44f1-a52e-b0439a21d95b)
+
+
+DFA Visualization
+![image](https://github.com/user-attachments/assets/4e9d1ed2-c0cf-44ed-9ef1-ca1d033ba80b)
+
 
 This laboratory work provided a practical exploration of finite automata, focusing on determinism, non-determinism, and the Chomsky hierarchy. By implementing a finite automaton and performing conversions between NDFA and DFA, we demonstrated the close relationship between these models and their applications in language processing.
 
