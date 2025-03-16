@@ -1,5 +1,6 @@
 import random
 from graphviz import Digraph
+import pandas as pd
 
 class Grammar:
     def __init__(self, VN, VT, P, S):
@@ -139,6 +140,7 @@ class FiniteAutomaton:
         state_names = {dfa_start: 'q0'}
         state_counter = 1
 
+        # Check if the start state is also an accept state
         if any(state in self.accept_states for state in dfa_start):
             dfa_accept.add(state_names[dfa_start])
 
@@ -150,21 +152,28 @@ class FiniteAutomaton:
             for symbol in self.alphabet:
                 next_states = set()
                 for state in current:
-                    if symbol in self.transitions.get(state, {}):
+                    if state in self.transitions and symbol in self.transitions[state]:
                         next_states.update(self.transitions[state][symbol])
                 next_frozen = frozenset(next_states)
 
-                if not next_frozen: 
+                if not next_frozen:  # No transition for this symbol
                     continue
 
                 if next_frozen not in state_names:
                     state_names[next_frozen] = f'q{state_counter}'
                     state_counter += 1
                     queue.append(next_frozen)
+                    dfa_states.add(next_frozen)
+
+                    # Check if this new state is an accept state
                     if any(state in self.accept_states for state in next_frozen):
                         dfa_accept.add(state_names[next_frozen])
 
                 dfa_transitions[current_name][symbol] = state_names[next_frozen]
+
+        # Ensure q0 is a final state if it is in the NFA's accept states
+        if self.start_state in self.accept_states:
+            dfa_accept.add(state_names[dfa_start])
 
         dfa_states_renamed = set(state_names.values())
         return FiniteAutomaton(
@@ -211,6 +220,7 @@ F: {{{', '.join(map(str, self.accept_states))}}}"""
 
 
 if __name__ == "__main__":
+    # Define the grammar
     VN = {'S', 'A', 'B', 'C'}
     VT = {'a', 'b', 'c', 'd'}
     P = {
@@ -223,6 +233,7 @@ if __name__ == "__main__":
 
     grammar = Grammar(VN, VT, P, S)
 
+    # Define the NFA for Variant 26
     variant_states = {'q0', 'q1', 'q2', 'q3'}
     variant_alphabet = {'a', 'b', 'c'}
     variant_transitions = {
@@ -231,10 +242,10 @@ if __name__ == "__main__":
         'q2': {'c': {'q3'}},
         'q3': {'c': {'q3'}}
     }
-    variant_start = 'q0'
-    variant_accept = {'q3'}
+    variant_start = 'q0'  # q0 is always the starting state
+    variant_accept = {'q3'}  # q3 is always a final state
 
-    variant_dfa = FiniteAutomaton(
+    variant_nfa = FiniteAutomaton(
         variant_states,
         variant_alphabet,
         variant_transitions,
@@ -242,23 +253,31 @@ if __name__ == "__main__":
         variant_accept
     )
 
+    # Generate a string from the grammar
     generated_string = grammar.generate_string()
     print(f"Generated string: {generated_string}")
 
+    # Classify the grammar
     print(f"Grammar classification: {grammar.classify_grammar()}")
 
+    # Convert the grammar to a finite automaton
     fa = grammar.to_finite_automaton()
     print("\nFinite Automaton:")
     print(fa)
 
+    # Check if the automaton is deterministic
     print("\nIs deterministic:", fa.is_deterministic())
 
-    dfa = fa.convert_to_dfa()
+    # Convert NFA to DFA
+    dfa = variant_nfa.convert_to_dfa()
     print("\nDFA:")
     print(dfa)
 
+    # Print the regular grammar
     print("\nRegular Grammar:")
     print(grammar)
 
-    fa.visualize("NDFA")
-    variant_dfa.visualize("DFA")
+    # Visualize the NFA and DFA
+    fa.visualize("FA")
+    variant_nfa.visualize("NFA")
+    dfa.visualize("DFA")
