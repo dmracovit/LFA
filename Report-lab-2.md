@@ -1,8 +1,7 @@
 # Laboratory Work 2
 
 ### Course: Formal Languages & Finite Automata  
-### Author: Cretu Dumitru  
-### Kudos to Vasile Drumea and Irina Cojuhari  
+### Author: Racovita Dumitru
 
 ---
 
