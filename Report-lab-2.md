@@ -179,12 +179,15 @@ Explanation: The finite automaton is converted into a regular grammar where each
 Output: A graphical representation of the FA is saved as finite_automaton.png.
 Screenshots
 NFA Visualization
+
 ![image](https://github.com/user-attachments/assets/0b8b3f5d-a02f-44f1-a52e-b0439a21d95b)
 
 
 DFA Visualization
+
 ![image](https://github.com/user-attachments/assets/4e9d1ed2-c0cf-44ed-9ef1-ca1d033ba80b)
 
+## Conclusions
 
 This laboratory work provided a practical exploration of finite automata, focusing on determinism, non-determinism, and the Chomsky hierarchy. By implementing a finite automaton and performing conversions between NDFA and DFA, we demonstrated the close relationship between these models and their applications in language processing.
 
