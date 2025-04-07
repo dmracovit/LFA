@@ -136,11 +136,9 @@ class FiniteAutomaton:
         dfa_transitions = {}
         queue = [dfa_start]
 
-        # Map frozenset states to readable names (q0, q1, etc.)
         state_names = {dfa_start: 'q0'}
         state_counter = 1
 
-        # Check if the start state is also an accept state
         if any(state in self.accept_states for state in dfa_start):
             dfa_accept.add(state_names[dfa_start])
 
@@ -165,13 +163,11 @@ class FiniteAutomaton:
                     queue.append(next_frozen)
                     dfa_states.add(next_frozen)
 
-                    # Check if this new state is an accept state
                     if any(state in self.accept_states for state in next_frozen):
                         dfa_accept.add(state_names[next_frozen])
 
                 dfa_transitions[current_name][symbol] = state_names[next_frozen]
 
-        # Ensure q0 is a final state if it is in the NFA's accept states
         if self.start_state in self.accept_states:
             dfa_accept.add(state_names[dfa_start])
 
@@ -220,7 +216,6 @@ F: {{{', '.join(map(str, self.accept_states))}}}"""
 
 
 if __name__ == "__main__":
-    # Define the grammar
     VN = {'S', 'A', 'B', 'C'}
     VT = {'a', 'b', 'c', 'd'}
     P = {
@@ -233,7 +228,6 @@ if __name__ == "__main__":
 
     grammar = Grammar(VN, VT, P, S)
 
-    # Define the NFA for Variant 26
     variant_states = {'q0', 'q1', 'q2', 'q3'}
     variant_alphabet = {'a', 'b', 'c'}
     variant_transitions = {
@@ -253,31 +247,24 @@ if __name__ == "__main__":
         variant_accept
     )
 
-    # Generate a string from the grammar
     generated_string = grammar.generate_string()
     print(f"Generated string: {generated_string}")
 
-    # Classify the grammar
     print(f"Grammar classification: {grammar.classify_grammar()}")
 
-    # Convert the grammar to a finite automaton
     fa = grammar.to_finite_automaton()
     print("\nFinite Automaton:")
     print(fa)
 
-    # Check if the automaton is deterministic
     print("\nIs deterministic:", fa.is_deterministic())
 
-    # Convert NFA to DFA
     dfa = variant_nfa.convert_to_dfa()
     print("\nDFA:")
     print(dfa)
 
-    # Print the regular grammar
     print("\nRegular Grammar:")
     print(grammar)
 
-    # Visualize the NFA and DFA
     fa.visualize("FA")
     variant_nfa.visualize("NFA")
     dfa.visualize("DFA")

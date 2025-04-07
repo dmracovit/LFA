@@ -27,7 +27,6 @@ TOKEN_TYPES = [
 
 TOKEN_REGEX = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in TOKEN_TYPES)
 
-
 class Lexer:
     def __init__(self, text):
         self.text = text
@@ -39,12 +38,12 @@ class Lexer:
             token_type = match.lastgroup
             value = match.group()
 
-            if token_type == "WHITESPACE":  # Ignore spaces and newlines
+            if token_type == "WHITESPACE": 
                 continue
 
             tokens.append((token_type, value))
         
-        tokens.append(("EOF", None))  # Add end of file token
+        tokens.append(("EOF", None)) 
         return tokens
 
     def next_token(self):
@@ -55,20 +54,101 @@ class Lexer:
 if __name__ == "__main__":
     code = """
     chunk1 {
-        TimeSignature=4/4
-        Tempo=120
-        Volume=80
-        Piano(R, do, 2/4)
-        Piano(L, sol, 1/4)
-        Piano(L, fa, 1/4)
-        sync {
-            Piano(R, re, 1/4)
-            Piano(R, mi, 1/4)
-        }
-        for(note = do; note < sol; note+=1){
-            Piano(R, note, 1/4)
-        }
+    TimeSignature=4/4
+    Tempo=120
+    Volume=80
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, do, 1/8)
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, sol, 1/4)
+    sync {
+        Guitar(L, do, 1/4)
+        Guitar(L, sol, 1/4)
     }
+}
+
+chunk2 {
+    TimeSignature=4/4
+    Tempo=120
+    Volume=80
+    Piano(R, sol, 1/8)
+    Pause(1/8)
+    Piano(R, do, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, la, 1/8)
+    Piano(R, si, 1/8)
+    Piano(R, la, 1/8)
+    sync {
+        Guitar(L, sol, 1/4)
+        Guitar(L, mi, 1/4)
+    }
+}
+
+chunk3 {
+    TimeSignature=4/4
+    Tempo=120
+    Volume=80
+    Piano(R, sol, 1/8)
+    Pause(1/8)
+    Piano(R, fa, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, do, 1/8)
+    Piano(R, re, 1/8)
+    Piano(R, si, 1/8)
+    sync {
+        Guitar(L, do, 1/4)
+        Guitar(L, sol, 1/4)
+    }
+}
+
+chunk4 {
+    TimeSignature=4/4
+    Tempo=120
+    Volume=80
+    Piano(R, do, 1/8)
+    Pause(1/8)
+    Piano(R, sol, 1/8)
+    Pause(1/8)
+    Piano(R, do, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Piano(R, sol, 1/8)
+    Piano(R, do, 1/8)
+    sync {
+        Guitar(L, do, 1/4)
+        Guitar(L, sol, 1/4)
+    }
+}
+
+chunk5 {
+    TimeSignature=4/4
+    Tempo=120
+    Volume=80
+    Piano(R, mi, 1/8)
+    Pause(1/8)
+    Piano(R, do, 1/8)
+    Pause(1/8)
+    Piano(R, sol, 1/8)
+    Pause(1/8)
+    Piano(R, mi, 1/8)
+    Piano(R, do, 1/8)
+    Piano(R, sol, 1/8)
+    sync {
+        Guitar(L, do, 1/4)
+        Guitar(L, sol, 1/4)
+    }
+}
+
     """
     lexer = Lexer(code)
     for token in lexer.tokens:
