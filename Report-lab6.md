@@ -1,6 +1,6 @@
 # Parser Implementation
 ### Course: Formal Languages & Finite Automata
-### Author: Your Name
+### Author: Racovita Dumitru FAF-233
 ----
 
 ## Theory
